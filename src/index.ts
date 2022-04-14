@@ -1,2 +1,2 @@
-export * from './ClientFactory';
-export * from './Client';
+export * from './clientFactory';
+export * from './client';
