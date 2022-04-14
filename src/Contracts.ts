@@ -1,9 +1,10 @@
-import { Contract, Signer, utils } from 'ethers';
-import { BaseProvider, Provider } from '@ethersproject/providers';
+import { Contract, ContractCall, Provider } from 'ethers-multicall';
+import { utils } from 'ethers';
 
-import { CoreVaultInterface } from './abi';
-import { ERC20Interface } from './abi/ERC20Interface';
-import { LendingInterface } from './abi/LendingInterface';
+import ERC20Interface from './abi/ERC20';
+import CoreVaultInterface from './abi/CoreVault';
+import LendingInterface from './abi/CLending';
+
 import { getTokenLogoURL } from './utils';
 import { TokenContract, TokenId, TokenInfo } from './types';
 import { Addresses } from './constants';
@@ -19,12 +20,12 @@ export class CoreContracts {
   public CoreToken: TokenContract;
   public CoreDAOToken: TokenContract;
 
-  public constructor(provider: BaseProvider) {
-    this.DaiContract = new Contract(utils.getAddress(Addresses.DAI), ERC20Interface, provider);
-    this.CoreContract = new Contract(utils.getAddress(Addresses.CORE), ERC20Interface, provider);
-    this.CoreDAOContract = new Contract(utils.getAddress(Addresses.CoreDAO), ERC20Interface, provider);
-    this.CoreVaultContract = new Contract(utils.getAddress(Addresses.CoreVault), CoreVaultInterface, provider);
-    this.LendingContract = new Contract(utils.getAddress(Addresses.Lending), LendingInterface, provider);
+  public constructor(private _provider: Provider) {
+    this.DaiContract = new Contract(utils.getAddress(Addresses.DAI), ERC20Interface);
+    this.CoreContract = new Contract(utils.getAddress(Addresses.CORE), ERC20Interface);
+    this.CoreDAOContract = new Contract(utils.getAddress(Addresses.CoreDAO), ERC20Interface);
+    this.CoreVaultContract = new Contract(utils.getAddress(Addresses.CoreVault), CoreVaultInterface);
+    this.LendingContract = new Contract(utils.getAddress(Addresses.Lending), LendingInterface);
 
     this.DaiToken = new TokenContract('Dai', 'DAI', this.DaiContract.address, this.DaiContract);
     this.CoreToken = new TokenContract('CORE', 'CORE', this.CoreContract.address, this.CoreContract);
@@ -55,5 +56,9 @@ export class CoreContracts {
       iconUrl: getTokenLogoURL('0x6B175474E89094C44Da98b954EedeAC495271d0F'),
       address: Addresses.DAI,
     });
+  }
+
+  all<T extends any[] = any[]>(calls: ContractCall[]): Promise<T> {
+    return this._provider.all(calls);
   }
 }

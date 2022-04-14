@@ -1,4 +1,4 @@
-import { Contract } from 'ethers';
+import { Contract } from 'ethers-multicall';
 
 export enum TokenId {
   Dai,
