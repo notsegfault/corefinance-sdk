@@ -9,18 +9,19 @@ export class ClientFactory {
     await provider.init();
 
     if (privateKey) {
-      return new CoreClient(provider, new Wallet(privateKey, nativeProvider));
+      return new CoreClient(provider, nativeProvider, new Wallet(privateKey, nativeProvider));
     }
 
-    return new CoreClient(provider);
+    return new CoreClient(provider, nativeProvider);
   }
 
   public static async createFrontendClient(
     webProvider: ethers.providers.ExternalProvider | ethers.providers.JsonRpcFetchFunc
   ): Promise<CoreClient> {
-    const provider = new Provider(new ethers.providers.Web3Provider(webProvider, 1));
+    const nativeProvider = new ethers.providers.Web3Provider(webProvider, 1);
+    const provider = new Provider(nativeProvider);
     await provider.init();
 
-    return new CoreClient(provider);
+    return new CoreClient(provider, nativeProvider);
   }
 }

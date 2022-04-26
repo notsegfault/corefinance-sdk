@@ -1,5 +1,14 @@
-import { BigNumber } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 import { CoreContracts } from '../contracts';
+import { Addresses } from '../constants';
+
+export interface IGlobalLendingInfo {
+  yearlyPercentInterest: BigNumber;
+  loanDefaultThresholdPercent: BigNumber;
+  collaterabilityOfCore: BigNumber;
+  collaterabilityOfCoreDAO: BigNumber;
+  daiLeftToBorrow: BigNumber;
+}
 
 export interface IUserLendingInfo {
   userCollateralValue: BigNumber;
@@ -28,6 +37,30 @@ export class Lending {
       debtorSummary,
       userCollaterals,
       accruedInterest,
+    };
+  }
+
+  async getGlobalStats(): Promise<IGlobalLendingInfo> {
+    const [
+      yearlyPercentInterest,
+      loanDefaultThresholdPercent,
+      collaterabilityOfCore,
+      collaterabilityOfCoreDAO,
+      daiLeftToBorrow,
+    ] = await this._contracts.all([
+      this._contracts.LendingContract.yearlyPercentInterest(),
+      this._contracts.LendingContract.loanDefaultThresholdPercent(),
+      this._contracts.LendingContract.collaterabilityOfToken(utils.getAddress(Addresses.CORE)),
+      this._contracts.LendingContract.collaterabilityOfToken(utils.getAddress(Addresses.CoreDAO)),
+      this._contracts.DaiContract.balanceOf(this._contracts.LendingContract.address),
+    ]);
+
+    return {
+      yearlyPercentInterest,
+      loanDefaultThresholdPercent,
+      collaterabilityOfCore,
+      collaterabilityOfCoreDAO,
+      daiLeftToBorrow,
     };
   }
 }

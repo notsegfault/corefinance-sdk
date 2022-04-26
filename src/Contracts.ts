@@ -1,5 +1,5 @@
 import { Contract, ContractCall, Provider } from 'ethers-multicall';
-import { utils } from 'ethers';
+import { ethers, utils } from 'ethers';
 
 import ERC20Interface from './abi/ERC20';
 import CoreVaultInterface from './abi/CoreVault';
@@ -20,7 +20,7 @@ export class CoreContracts {
   public CoreToken: TokenContract;
   public CoreDAOToken: TokenContract;
 
-  public constructor(private _provider: Provider) {
+  public constructor(private _provider: Provider, private _nativeProvider: ethers.providers.BaseProvider) {
     this.DaiContract = new Contract(utils.getAddress(Addresses.DAI), ERC20Interface);
     this.CoreContract = new Contract(utils.getAddress(Addresses.CORE), ERC20Interface);
     this.CoreDAOContract = new Contract(utils.getAddress(Addresses.CoreDAO), ERC20Interface);
@@ -56,6 +56,10 @@ export class CoreContracts {
       iconUrl: getTokenLogoURL('0x6B175474E89094C44Da98b954EedeAC495271d0F'),
       address: Addresses.DAI,
     });
+  }
+
+  get provider(): ethers.providers.BaseProvider {
+    return this._nativeProvider;
   }
 
   all<T extends any[] = any[]>(calls: ContractCall[]): Promise<T> {
