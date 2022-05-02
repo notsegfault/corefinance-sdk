@@ -28,5 +28,10 @@ describe('Core Finance SDK', () => {
       const stats = await client.corevault.getApyStats();
       expect(stats).toBeDefined();
     });
+
+    it('returns the repay amounts', async () => {
+      const amounts = await client.lending.getRepayAmounts('0xe743671e61d73e04daaeb0d8c70050a7a7516e60');
+      expect(amounts).toBeDefined();
+    });
   });
 });

@@ -1,6 +1,7 @@
 import { BigNumber, utils } from 'ethers';
 import { CoreContracts } from '../contracts';
 import { Addresses } from '../constants';
+import { TokenContract } from '../types';
 
 export interface IGlobalLendingInfo {
   yearlyPercentInterest: BigNumber;
@@ -16,6 +17,17 @@ export interface IUserLendingInfo {
   debtorSummary: BigNumber;
   userCollaterals: BigNumber;
   accruedInterest: BigNumber;
+}
+
+export interface IRepayAmount {
+  amountInCore: BigNumber;
+  amountInCoreDAO: BigNumber;
+  amountInDai: BigNumber;
+}
+
+export interface IRepayAmounts {
+  minimum: IRepayAmount;
+  maximum: IRepayAmount;
 }
 
 export class Lending {
@@ -37,6 +49,44 @@ export class Lending {
       debtorSummary,
       userCollaterals,
       accruedInterest,
+    };
+  }
+
+  async getRepayAmounts(account: string, secondsToAdd = 300 /* 5 mins */): Promise<IRepayAmounts> {
+    const [debtorSummary, yearlyPercentInterest, collaterabilityOfCore, collaterabilityOfCoreDAO] =
+      await this._contracts.all([
+        this._contracts.LendingContract.debtorSummary(account),
+        this._contracts.LendingContract.yearlyPercentInterest(),
+        this._contracts.LendingContract.collaterabilityOfToken(utils.getAddress(Addresses.CORE)),
+        this._contracts.LendingContract.collaterabilityOfToken(utils.getAddress(Addresses.CoreDAO)),
+      ]);
+
+    const blockNumber = await this._contracts.provider.getBlockNumber();
+    const timestamp = (await this._contracts.provider.getBlock(blockNumber)).timestamp;
+
+    const timeSinceLastLoan = BigNumber.from(timestamp)
+      .add(BigNumber.from(secondsToAdd))
+      .sub(debtorSummary.timeLastBorrow);
+
+    const fullAccruedInterest = debtorSummary.amountDAIBorrowed
+      .mul(yearlyPercentInterest)
+      .div(BigNumber.from(100))
+      .mul(timeSinceLastLoan)
+      .div(BigNumber.from(365 * 24 * 60 * 60));
+
+    const totalDebt = debtorSummary.amountDAIBorrowed.add(fullAccruedInterest);
+
+    return {
+      minimum: {
+        amountInCore: fullAccruedInterest.div(collaterabilityOfCore),
+        amountInCoreDAO: fullAccruedInterest.div(collaterabilityOfCoreDAO),
+        amountInDai: fullAccruedInterest,
+      },
+      maximum: {
+        amountInCore: totalDebt.div(collaterabilityOfCore),
+        amountInCoreDAO: totalDebt.div(collaterabilityOfCoreDAO),
+        amountInDai: totalDebt,
+      },
     };
   }
 
