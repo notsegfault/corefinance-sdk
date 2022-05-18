@@ -1,7 +1,6 @@
-import { BigNumber, utils } from 'ethers';
+import { BigNumber, utils, Wallet } from 'ethers';
 import { CoreContracts } from '../contracts';
 import { Addresses } from '../constants';
-import { TokenContract } from '../types';
 
 export interface IGlobalLendingInfo {
   yearlyPercentInterest: BigNumber;
@@ -31,7 +30,26 @@ export interface IRepayAmounts {
 }
 
 export class Lending {
-  constructor(private _contracts: CoreContracts) {}
+  constructor(private _contracts: CoreContracts, private _wallet?: Wallet) {}
+
+  async addCollateral(collateralTokenAddress: string, collateralAmount: BigNumber) {
+    return this._contracts.LendingContract.connect(this._wallet).addCollateral(
+      collateralTokenAddress,
+      collateralAmount
+    );
+  }
+
+  async addCollateralAndBorrow(collateralTokenAddress: string, collateralAmount: BigNumber, borrowAmount: BigNumber) {
+    return this._contracts.LendingContract.connect(this._wallet).addCollateralAndBorrow(
+      collateralTokenAddress,
+      collateralAmount,
+      borrowAmount
+    );
+  }
+
+  async borrow(borrowAmount: BigNumber) {
+    return this._contracts.LendingContract.connect(this._wallet).borrow(borrowAmount);
+  }
 
   async getUserStats(account: string): Promise<IUserLendingInfo> {
     const [userCollateralValue, userTotalDebt, debtorSummary, userCollaterals, accruedInterest] =

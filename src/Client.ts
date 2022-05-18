@@ -15,7 +15,7 @@ export class CoreClient {
     private _wallet?: Wallet
   ) {
     this._contracts = new CoreContracts(_provider, _nativeProvider);
-    this._lending = new Lending(this._contracts);
+    this._lending = new Lending(this._contracts, _wallet);
     this._coreVault = new CoreVault(this._contracts);
   }
 
