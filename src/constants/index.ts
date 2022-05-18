@@ -5,3 +5,7 @@ export const Addresses = {
   Lending: '0x54B276C8a484eBF2a244D933AF5FFaf595ea58c5',
   CoreVault: '0xC5cacb708425961594B63eC171f4df27a9c0d8c9',
 };
+
+export const Pid = {
+  CoreDAO: 3,
+};

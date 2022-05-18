@@ -1,6 +1,6 @@
-import { BigNumber, ethers, utils } from 'ethers';
+import { BigNumber, ethers, utils, Wallet } from 'ethers';
 import { CoreContracts } from '../contracts';
-import { Addresses } from '../constants';
+import { Addresses, Pid } from '../constants';
 import CoinGecko from 'coingecko-api';
 
 const approximatedBlockPerDay = 6450;
@@ -34,8 +34,21 @@ export interface ICoreVaultApy {
 export class CoreVault {
   private _coinGeckoClient: CoinGecko;
 
-  constructor(private _contracts: CoreContracts) {
+  constructor(private _contracts: CoreContracts, private _wallet?: Wallet) {
     this._coinGeckoClient = new CoinGecko();
+  }
+
+  async claimCoreRewards() {
+    return this._contracts.CoreVaultContract.connect(this._wallet).deposit(Pid.CoreDAO, 0);
+  }
+
+  async stakeCoreDao(amount: BigNumber) {
+    return this._contracts.CoreVaultContract.connect(this._wallet).stake(Pid.CoreDAO, amount);
+  }
+
+  async getPendingCoreRewards(account: string): Promise<BigNumber> {
+    const [pendingCore] = await this._contracts.all([this._contracts.CoreVaultContract.pendingCore(account)]);
+    return pendingCore;
   }
 
   async getApyStats(): Promise<any> {
